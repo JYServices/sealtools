@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A simple note-taking app built with HTML, CSS, and JavaScript. Create, edit, and delete, and even share with other people with this note app easily.">
+    <title>SealKit: ShareNotes</title>
+    <link rel="stylesheet" href="/assets/reset.min.css">
+    <script src="/assets/tailwind.3.4.16.min.js"></script>
+    <link rel="stylesheet" href="/assets/note-e7F8d.css">
+</head>
+<body class="flex h-screen bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <div class="w-80 bg-white shadow-md flex flex-col border-r border-slate-200">
+        <div class="p-5 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+            <h2 class="text-lg font-semibold text-slate-700">My Notes</h2>
+            <button id="new-note-btn" title="Create New Note" class="flex items-center justify-center w-8 h-8 text-indigo-600 hover:bg-indigo-100 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="flex-grow overflow-y-auto">
+            <ul id="notes-list" class="list-none p-0 m-0 divide-y divide-slate-100">
+                <li class="p-4 text-slate-500 text-center italic">Loading notes...</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="editor-pane" class="flex-grow flex flex-col bg-white">
+        <div class="h-16 flex-shrink-0 px-6 flex items-center justify-end border-b border-slate-100">
+            <span id="save-status" class="text-sm text-slate-400 mr-4 transition-opacity duration-300 ease-in-out opacity-0">Saved</span>
+            <div class="toolbar flex space-x-2">
+                <button onclick="formatText('bold')" title="Bold (Ctrl+B)" class="p-2 rounded-md hover:bg-slate-200 text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" transform="rotate(90 10 10) translate(0, 3)" /> <path d="M6 4.75A2.75 2.75 0 003.25 7.5v5A2.75 2.75 0 006 15.25h2.75a3.75 3.75 0 003.75-3.75v-2.5A3.75 3.75 0 008.75 4.75H6zm2.75 8h-2.5a1.25 1.25 0 01-1.25-1.25v-5c0-.69.56-1.25 1.25-1.25h2.5a2.25 2.25 0 012.25 2.25v2.5A2.25 2.25 0 018.75 12.75z" />
+                    </svg>
+                </button>
+                <button onclick="formatText('italic')" title="Italic (Ctrl+I)" class="p-2 rounded-md hover:bg-slate-200 text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5.75 4.75a.75.75 0 000 1.5h1.56l-2.06 7.5H4a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5H7.29l2.06-7.5H10.6a.75.75 0 000-1.5H5.75z" transform="skewX(-15)"/>
+                    </svg>
+                </button>
+                <button onclick="formatText('underline')" title="Underline (Ctrl+U)" class="p-2 rounded-md hover:bg-slate-200 text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                         <path d="M6 4.75A2.75 2.75 0 003.25 7.5v3.34a3.75 3.75 0 006.1 2.767L10 14.12V7.5A2.75 2.75 0 007.25 4.75H6zM7.5 12.31a2.25 2.25 0 01-2.145-1.56H6A1.25 1.25 0 014.75 9.5v-2A1.25 1.25 0 016 6.25h1.25A1.25 1.25 0 018.5 7.5v4.81zM16.25 15a.75.75 0 000-1.5H3.75a.75.75 0 000 1.5h12.5z" />
+                    </svg>
+                </button>
+                <button id="share-note-btn" title="Share Note" class="p-2 rounded-md hover:bg-slate-200 text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M15 8a3 3 0 11-6 0 3 3 0 016 0zM4 8a4 4 0 118 0 4 4 0 01-8 0zM4 12a8 8 0 0116 0v1a1 1 0 01-1 1H5a1 1 0 01-1-1v-1z" />
+                    </svg>
+                </button>
+            </div>
+         </div>
+
+        <div class="flex-grow flex flex-col p-8 overflow-y-auto">
+            <div id="editor-content-wrapper" class="flex-grow flex flex-col">
+                 <input id="note-title" type="text" class="w-full text-3xl font-bold text-slate-900 mb-5 pb-2 border-b border-transparent focus:border-slate-200 outline-none placeholder-slate-400 transition-colors duration-200 ease-in-out" placeholder="Untitled Note">
+
+                 <div id="note-content"
+                     contenteditable="true"
+                     data-placeholder="Start writing your note here..."
+                     class="flex-grow text-slate-700 text-base leading-relaxed focus:outline-none prose prose-slate max-w-none prose-p:my-2 prose-headings:my-3"
+                     style="min-height: 300px;">
+                     </div>
+            </div>
+             <div id="empty-state" class="flex-grow flex flex-col items-center justify-center text-center text-slate-400 hidden">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                 </svg>
+                 <h3 class="text-lg font-medium text-slate-500">Select a note or create a new one</h3>
+                 <p class="mt-1 text-sm">Your notes will appear here.</p>
+             </div>
+        </div>
+    </div>
+
+    <div id="share-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 class="text-lg font-semibold mb-4">Share Note</h3>
+            <label class="block mb-2">
+                <span class="text-sm text-gray-700">Password (optional):</span>
+                <input id="share-password" type="password" class="w-full mt-1 p-2 border rounded-md" placeholder="Enter a password">
+            </label>
+            <label class="block mb-4">
+                <span class="text-sm text-gray-700">Permissions:</span>
+                <select id="share-permissions" class="w-full mt-1 p-2 border rounded-md">
+                    <option value="read">Read Only</option>
+                    <option value="edit">Edit Available (Beta, Testing, may not work)</option>
+                </select>
+            </label>
+            <div class="flex justify-end space-x-2">
+                <button id="cancel-share-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">Cancel</button>
+                <button id="confirm-share-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Share</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="share-popup" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+            <h3 class="text-lg font-semibold mb-4 text-indigo-600">Shareable Link</h3>
+            <p id="share-link" class="text-sm text-gray-700 break-all mb-4"></p>
+            <div id="qr-code" class="mb-4"></div>
+            <button id="copy-link-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Copy Link</button>
+            <button id="close-popup-btn" class="mt-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">Close</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script>
+        let notes = loadNotes(); // Load notes from local storage
+        let currentNoteId = null; // ID of the note currently being edited
+        let saveTimer; // Timer for debounced saving
+        let saveStatusTimer; // Timer for hiding the "Saved" status
+
+        const notesListEl = document.getElementById('notes-list');
+        const noteTitleEl = document.getElementById('note-title');
+        const noteContentEl = document.getElementById('note-content');
+        const newNoteBtn = document.getElementById('new-note-btn');
+        const editorPaneEl = document.getElementById('editor-pane');
+        const editorContentWrapperEl = document.getElementById('editor-content-wrapper');
+        const emptyStateEl = document.getElementById('empty-state');
+        const saveStatusEl = document.getElementById('save-status');
+
+        const shareModal = document.getElementById('share-modal');
+        const shareNoteBtn = document.getElementById('share-note-btn');
+        const cancelShareBtn = document.getElementById('cancel-share-btn');
+        const confirmShareBtn = document.getElementById('confirm-share-btn');
+
+        const sharePopup = document.getElementById('share-popup');
+        const shareLinkEl = document.getElementById('share-link');
+        const qrCodeEl = document.getElementById('qr-code');
+        const copyLinkBtn = document.getElementById('copy-link-btn');
+        const closePopupBtn = document.getElementById('close-popup-btn');
+
+        shareNoteBtn.addEventListener('click', () => {
+            if (currentNoteId) {
+                shareModal.classList.remove('hidden');
+            } else {
+                alert('Please select a note to share.');
+            }
+        });
+
+        cancelShareBtn.addEventListener('click', () => {
+            shareModal.classList.add('hidden');
+        });
+
+        copyLinkBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(shareLinkEl.textContent).then(() => {
+                alert('Link copied to clipboard!');
+            });
+        });
+
+        closePopupBtn.addEventListener('click', () => {
+            sharePopup.classList.add('hidden');
+        });
+
+        async function fetchSharedNoteContent(uuid) {
+            try {
+                const response = await fetch(`/shared/${uuid}`);
+                if (response.ok) {
+                    const { title, content } = await response.json();
+                    noteTitleEl.value = title;
+                    noteContentEl.innerHTML = content;
+                    currentNoteId = null; // Shared notes are not editable
+                    showEmptyState(false);
+                } else {
+                    console.error('Failed to fetch shared note content.');
+                }
+            } catch (error) {
+                console.error('Error fetching shared note content:', error);
+            }
+        }
+
+        confirmShareBtn.addEventListener('click', async () => {
+            if (!currentNoteId) {
+                alert('Please select a note to share.');
+                return;
+            }
+
+            const permissions = document.getElementById('share-permissions').value;
+            const note = notes.find(n => n.id === currentNoteId);
+
+            if (!note) {
+                alert('Note not found.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/share', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        noteId: note.id,
+                        content: note.content,
+                        password: document.getElementById('share-password').value,
+                        permissions
+                    })
+                });
+
+                if (response.ok) {
+                    const { link } = await response.json();
+                    shareLinkEl.textContent = link;
+                    // --- QR code rendering ---
+                    qrCodeEl.innerHTML = ''; // Clear previous QR code
+                    const canvas = document.createElement('canvas');
+                    qrCodeEl.appendChild(canvas);
+                    QRCode.toCanvas(canvas, link, { width: 150 }, function (error) {
+                        if (error) console.error(error);
+                    });
+                    // --- end QR code rendering ---
+                    sharePopup.classList.remove('hidden');
+                    shareModal.classList.add('hidden');
+                } else {
+                    alert('Failed to share the note.');
+                }
+            } catch (error) {
+                console.error('Error sharing note:', error);
+                alert('An error occurred while sharing the note.');
+            }
+        });
+
+        // --- Utility Functions ---
+
+        function generateId() {
+            return Date.now() + Math.random().toString(16).slice(2); // More robust unique ID
+        }
+
+        function stripHtml(html) {
+           let tmp = document.createElement("DIV");
+           tmp.innerHTML = html;
+           return tmp.textContent || tmp.innerText || "";
+        }
+
+        function formatRelativeTime(timestamp) {
+            const now = new Date();
+            const past = new Date(timestamp);
+            const diffInSeconds = Math.floor((now - past) / 1000);
+            const diffInMinutes = Math.floor(diffInSeconds / 60);
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            const diffInDays = Math.floor(diffInHours / 24);
+
+            if (diffInSeconds < 60) return "Just now";
+            if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+            if (diffInHours < 24) return `${diffInHours}h ago`;
+            if (diffInDays < 7) return `${diffInDays}d ago`;
+            return past.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // --- Note Management Functions ---
+
+        function saveNotes() {
+            // Sort notes by most recently updated first before saving
+            notes.sort((a, b) => b.updatedAt - a.updatedAt);
+            localStorage.setItem('toolseal-notes-app-data-user', JSON.stringify(notes));
+        }
+
+        function loadNotes() {
+            const savedNotes = localStorage.getItem('toolseal-notes-app-data-user');
+            // Ensure essential properties exist
+            const parsedNotes = savedNotes ? JSON.parse(savedNotes) : [];
+            return parsedNotes.map(note => ({
+                id: note.id || generateId(), // Assign ID if missing (migration)
+                title: note.title || '',
+                content: note.content || '',
+                createdAt: note.createdAt || Date.now(), // Assign creation time if missing
+                updatedAt: note.updatedAt || Date.now()  // Assign update time if missing
+            })).sort((a, b) => b.updatedAt - a.updatedAt); // Sort on load
+        }
+
+        function showSaveStatus() {
+            clearTimeout(saveStatusTimer);
+            saveStatusEl.classList.remove('opacity-0');
+            saveStatusEl.classList.add('opacity-100');
+             saveStatusEl.textContent = "Saving...";
+             // Set timeout to show "Saved" and then fade out
+             setTimeout(() => {
+                saveStatusEl.textContent = "Saved";
+                saveStatusTimer = setTimeout(() => {
+                     saveStatusEl.classList.remove('opacity-100');
+                     saveStatusEl.classList.add('opacity-0');
+                }, 1500); // Keep "Saved" visible for 1.5 seconds
+             }, 300); // Show "Saving..." briefly
+        }
+
+        function renderNoteList() {
+            notesListEl.innerHTML = ''; // Clear current list
+
+            if (notes.length === 0) {
+                 notesListEl.innerHTML = `
+                    <li class="p-6 text-center text-slate-400 text-sm">
+                        No notes yet. Click the '+' button to create one!
+                    </li>`;
+                 showEmptyState(true); // Show the main empty state
+                return;
+            } else {
+                 showEmptyState(false); // Hide the main empty state if notes exist
+            }
+
+            notes.forEach(note => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('p-4', 'cursor-pointer', 'hover:bg-slate-100', 'transition-colors', 'duration-150', 'ease-in-out', 'group', 'relative'); // Added group for hover effect on delete button
+                if (note.id === currentNoteId) {
+                    listItem.classList.add('bg-indigo-50', 'border-l-4', 'border-indigo-500'); // Enhanced selected style
+                     listItem.classList.remove('hover:bg-slate-100'); // Don't apply hover bg to selected
+                } else {
+                    listItem.classList.add('border-l-4', 'border-transparent'); // Placeholder border for alignment
+                }
+
+                const displayTitle = note.title.trim() || 'Untitled Note';
+                const previewText = stripHtml(note.content).substring(0, 60) + (stripHtml(note.content).length > 60 ? '...' : '');
+                 const timeAgo = formatRelativeTime(note.updatedAt);
+
+                listItem.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <h3 class="text-sm font-semibold text-slate-800 truncate pr-10">${displayTitle}</h3>
+                        <span class="text-xs text-slate-400 flex-shrink-0">${timeAgo}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 truncate pr-6">${previewText || 'No additional content'}</p>
+                    <button class="delete-note-btn absolute top-3 right-3 w-6 h-6 flex items-center justify-center text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 focus:opacity-100 rounded-full hover:bg-slate-200 transition-all duration-150 ease-in-out focus:outline-none focus:ring-1 focus:ring-red-400" title="Delete Note">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                         </svg>
+                    </button>
+                `;
+
+                listItem.dataset.noteId = note.id;
+                listItem.addEventListener('click', (e) => {
+                     // Prevent selection if delete button was clicked
+                     if (!e.target.closest('.delete-note-btn')) {
+                        selectNote(note.id);
+                     }
+                });
+
+                 // Add event listener specifically for the delete button
+                listItem.querySelector('.delete-note-btn').addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent triggering the li click
+                    deleteNote(note.id);
+                });
+
+                notesListEl.appendChild(listItem);
+            });
+        }
+
+        function selectNote(id) {
+            if (currentNoteId === id) return; // Do nothing if already selected
+
+            // Save the current note before switching
+            if (currentNoteId !== null) {
+                 // Clear the timer to prevent saving *after* switching
+                 clearTimeout(saveTimer);
+                saveCurrentNote(false); // Save immediately without triggering save status animation again
+            }
+
+            currentNoteId = id;
+            const note = notes.find(n => n.id === id);
+
+            if (note) {
+                showEmptyState(false); // Make sure editor is visible
+                noteTitleEl.value = note.title;
+                noteContentEl.innerHTML = note.content;
+                noteContentEl.focus(); // Focus content area
+            } else {
+                console.error("Note not found:", id);
+                clearEditor(); // Clear editor if note somehow doesn't exist
+                currentNoteId = null;
+                 showEmptyState(true);
+            }
+            renderNoteList(); // Re-render list to highlight the newly selected note
+        }
+
+         function clearEditor() {
+             noteTitleEl.value = '';
+             noteContentEl.innerHTML = '';
+             currentNoteId = null;
+         }
+
+         function showEmptyState(show) {
+             if (show) {
+                 editorContentWrapperEl.classList.add('hidden');
+                 emptyStateEl.classList.remove('hidden');
+             } else {
+                 editorContentWrapperEl.classList.remove('hidden');
+                 emptyStateEl.classList.add('hidden');
+             }
+         }
+
+        function saveCurrentNote(showStatus = true) {
+            if (currentNoteId === null) return; // Nothing to save if no note is selected
+
+            const noteIndex = notes.findIndex(n => n.id === currentNoteId);
+            if (noteIndex > -1) {
+                const note = notes[noteIndex];
+                const newTitle = noteTitleEl.value.trim();
+                const newContent = noteContentEl.innerHTML; // Keep raw HTML from contenteditable
+
+                 // Check if anything actually changed
+                const titleChanged = note.title !== newTitle;
+                const contentChanged = note.content !== newContent;
+
+                if (titleChanged || contentChanged) {
+                    note.title = newTitle;
+                    note.content = newContent;
+                    note.updatedAt = Date.now(); // Update timestamp only on change
+
+                    saveNotes(); // Save to Local Storage
+                    if (showStatus) {
+                        showSaveStatus();
+                    }
+                    renderNoteList(); // Update list item (e.g., timestamp, preview)
+                 }
+            } else {
+                 console.warn("Attempted to save a note that doesn't exist in the array:", currentNoteId);
+             }
+        }
+
+        function deleteNote(idToDelete) {
+            const noteToDelete = notes.find(n => n.id === idToDelete);
+            if (!noteToDelete) return;
+
+            const title = noteToDelete.title.trim() || "Untitled Note";
+            if (confirm(`Are you sure you want to delete "${title}"?`)) {
+                notes = notes.filter(note => note.id !== idToDelete);
+                saveNotes();
+
+                // If the deleted note was the currently selected one
+                if (currentNoteId === idToDelete) {
+                    currentNoteId = null;
+                    clearEditor();
+                    // Select the first note if available, otherwise show empty state
+                    if (notes.length > 0) {
+                        selectNote(notes[0].id); // Select the new first note (which is the most recently updated)
+                    } else {
+                         showEmptyState(true);
+                    }
+                }
+                 renderNoteList(); // Update the list immediately
+            }
+        }
+
+
+        function addNewNote() {
+            // Save the currently open note first
+            if (currentNoteId !== null) {
+                 clearTimeout(saveTimer); // Prevent delayed save interfering
+                 saveCurrentNote(false);
+            }
+
+            const newId = generateId();
+            const now = Date.now();
+            const newNote = {
+                id: newId,
+                title: '',
+                content: '',
+                createdAt: now,
+                updatedAt: now
+            };
+            notes.unshift(newNote); // Add to the beginning (will be sorted on save anyway)
+            saveNotes(); // Save immediately so it exists in storage
+            selectNote(newId); // Select and open the new note
+            noteTitleEl.focus(); // Focus the title field for a new note
+             renderNoteList(); // Update list immediately
+        }
+
+        // --- Editor Formatting Function ---
+
+        function formatText(command) {
+             document.execCommand(command, false, null);
+             noteContentEl.focus(); // Keep focus
+             triggerSave(); // Trigger auto-save after formatting
+        }
+
+        // --- Event Listeners ---
+
+        // Debounced save for input events
+        function triggerSave() {
+             clearTimeout(saveTimer);
+              // Show "Saving..." immediately but wait to actually save
+              saveStatusEl.textContent = "Saving...";
+              saveStatusEl.classList.remove('opacity-0');
+              saveStatusEl.classList.add('opacity-100');
+              clearTimeout(saveStatusTimer); // Prevent premature fade out if typing continues
+
+             saveTimer = setTimeout(() => {
+                 saveCurrentNote(true); // Save and show full "Saved" animation
+             }, 800); // Save 800ms after typing stops
+        }
+
+        noteTitleEl.addEventListener('input', triggerSave);
+        noteContentEl.addEventListener('input', triggerSave);
+
+        // Save immediately on blur if there was a pending save
+         noteTitleEl.addEventListener('blur', () => {
+             clearTimeout(saveTimer);
+             saveCurrentNote(false); // Save immediately, don't restart full save animation
+         });
+         noteContentEl.addEventListener('blur', () => {
+             clearTimeout(saveTimer);
+             saveCurrentNote(false);
+         });
+
+        newNoteBtn.addEventListener('click', addNewNote);
+
+         // Save note before user leaves the page
+         window.addEventListener('beforeunload', (event) => {
+             if (currentNoteId !== null) {
+                 clearTimeout(saveTimer); // Ensure no pending timer
+                 saveCurrentNote(false); // Final save
+             }
+         });
+
+        // On load, check for shared note UUID and fetch content if present
+        const sharedNoteUUID = localStorage.getItem('shared-note-uuid');
+        if (sharedNoteUUID) {
+            fetchSharedNoteContent(sharedNoteUUID);
+        } else {
+            renderNoteList();
+            if (notes.length > 0) {
+                selectNote(notes[0].id);
+            } else {
+                showEmptyState(true);
+            }
+        }
+
+    </script>
+</body>
+</html>

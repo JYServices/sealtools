@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TOAST UI Calendar Enhanced</title>
+    <link rel="stylesheet" href="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.css" />
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui.date-picker/latest/tui-date-picker.css">
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui.time-picker/latest/tui-time-picker.css">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+
+        #calendar-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        #calendar-nav button {
+            padding: 8px 15px;
+            margin: 0 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        #calendar-nav button:hover {
+            background-color: #f0f0f0;
+        }
+
+        #calendar-nav .date-range {
+            font-size: 18px;
+            font-weight: bold;
+            flex-grow: 1; /* Allow date range to take available space */
+            text-align: center;
+        }
+
+        #view-selector button {
+             margin-left: 0; /* Reset left margin */
+        }
+         #view-selector button:first-child {
+             margin-left: 5px; /* Add margin to the first button in the group */
+         }
+
+
+        /* Modal Styling */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto; /* Auto margin centers horizontally */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%; /* Could be responsive */
+            max-width: 500px; /* Maximum width */
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .modal-content input[type="text"],
+        .modal-content input[type="datetime-local"],
+        .modal-content select {
+            width: calc(100% - 22px); /* Adjust for padding and border */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .modal-content button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .modal-content .save-button {
+            background-color: #5cb85c;
+            color: white;
+        }
+
+        .modal-content .cancel-button {
+            background-color: #f0ad4e;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="calendar-container">
+        <div id="calendar-nav">
+            <button id="prevBtn">&lt; 이전</button>
+            <span class="date-range" id="dateRangeDisplay"></span>
+            <button id="nextBtn">다음 &gt;</button>
+            <div id="view-selector">
+                <button id="monthViewBtn">월</button>
+                <button id="weekViewBtn">주</button>
+                <button id="dayViewBtn">일</button>
+            </div>
+            <button id="addEventManuallyBtn">일정 추가</button>
+        </div>
+
+        <div id="calendar" style="height: 700px;"></div>
+    </div>
+
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="modalTitle">새 일정 추가</h2>
+            <form id="eventForm">
+                <input type="hidden" id="eventId">
+                <input type="hidden" id="eventCalendarId">
+
+                <label for="eventTitle">제목:</label>
+                <input type="text" id="eventTitle" required><br>
+
+                <label for="eventCalendar">캘린더:</label>
+                 <select id="eventCalendar">
+                    </select><br>
+
+                <label for="eventStart">시작:</label>
+                <input type="datetime-local" id="eventStart" required><br>
+
+                <label for="eventEnd">종료:</label>
+                <input type="datetime-local" id="eventEnd" required><br>
+
+                <button type="submit" class="save-button">저장</button>
+                <button type="button" class="cancel-button" id="cancelEventBtn">취소</button>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.js"></script>
+    <script>
+        // 캘린더 컨테이너 요소 선택
+        const container = document.getElementById('calendar');
+        const dateRangeDisplay = document.getElementById('dateRangeDisplay');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const monthViewBtn = document.getElementById('monthViewBtn');
+        const weekViewBtn = document.getElementById('weekViewBtn');
+        const dayViewBtn = document.getElementById('dayViewBtn');
+        const addEventManuallyBtn = document.getElementById('addEventManuallyBtn');
+
+        // Modal elements
+        const eventModal = document.getElementById('eventModal');
+        const closeModalBtn = eventModal.querySelector('.close-button');
+        const cancelEventBtn = document.getElementById('cancelEventBtn');
+        const eventForm = document.getElementById('eventForm');
+        const eventIdInput = document.getElementById('eventId');
+        const eventCalendarIdInput = document.getElementById('eventCalendarId');
+        const eventTitleInput = document.getElementById('eventTitle');
+        const eventCalendarSelect = document.getElementById('eventCalendar'); // Select for calendar type
+        const eventStartInput = document.getElementById('eventStart');
+        const eventEndInput = document.getElementById('eventEnd');
+        const modalTitle = document.getElementById('modalTitle');
+
+        // 캘린더 옵션 설정
+        const options = {
+            defaultView: 'month', // 기본 뷰를 월별로 설정
+            useFormPopup: false, // Disable default TOAST UI popup
+            useCreationPopup: false, // Disable default TOAST UI creation popup
+            calendars: [
+                {
+                    id: 'cal1',
+                    name: '개인',
+                    backgroundColor: '#03bd9e',
+                    borderColor: '#03bd9e',
+                },
+                {
+                    id: 'cal2',
+                    name: '업무',
+                    backgroundColor: '#00a9ff',
+                    borderColor: '#00a9ff',
+                },
+                 {
+                    id: 'cal3',
+                    name: '기타',
+                    backgroundColor: '#ff5583',
+                    borderColor: '#ff5583',
+                },
+            ],
+             theme: {
+                'month.dayname.height': '42px',
+                'month.dayname.borderLeft': 'none',
+                'month.dayname.paddingLeft': '0',
+                'month.dayname.paddingRight': '0',
+                'month.dayname.fontSize': '13px',
+                'month.dayname.textAlign': 'center',
+                'month.holidayExceptThisMonth.color': '#f3f3f3',
+                'month.dayExceptThisMonth.color': '#f3f3f3',
+                'month.weekend.backgroundColor': '#fafafa',
+                'month.moreView.boxShadow': 'none',
+                'month.moreView.border': '1px solid #d5d5d5',
+                'week.dayname.height': '42px',
+                'week.dayname.borderTop': '1px solid #eee',
+                'week.dayname.borderBottom': '1px solid #eee',
+                'week.dayname.borderLeft': 'none',
+                'week.dayname.paddingLeft': '0',
+                'week.dayname.paddingRight': '0',
+                'week.dayname.textAlign': 'center',
+                'week.today.backgroundColor': 'rgba(81, 92, 230, 0.05)',
+                'week.weekend.backgroundColor': 'inherit',
+                'week.currentTime.color': '#135de6',
+                'week.currentTime.fontWeight': 'bold',
+                'week.currentTime.border': '1px dashed #135de6',
+                'timezone.displayLabel': 'true',
+                'timezone.boxShadow.right': '0 0 0 #eee',
+                'lnb.borderRight': '1px solid #eee',
+                'schedule.border': '2px solid #00a9ff',
+                'schedule.backgroundColor': '#00a9ff',
+                'schedule.color': 'white',
+                'schedule.fontweight': 'bold',
+                'common.border': '1px solid #eee',
+                'common.dayname.color': '#333',
+                'common.saturday.color': '#24a3ff',
+                'common.sunday.color': '#ff5a87',
+                'common.narrowWeekend.backgroundColor': 'inherit',
+            },
+        };
+
+        // 캘린더 인스턴스 생성
+        const calendar = new tui.Calendar(container, options);
+
+        // --- Initial Setup ---
+
+        // Populate calendar select options in the modal
+        options.calendars.forEach(cal => {
+            const option = document.createElement('option');
+            option.value = cal.id;
+            option.textContent = cal.name;
+            eventCalendarSelect.appendChild(option);
+        });
+
+
+        // Function to update the date range display
+        function updateDateRangeDisplay() {
+            const start = calendar.getDateRangeStart();
+            const end = calendar.getDateRangeEnd();
+            const view = calendar.getViewName();
+
+            let dateRangeText = '';
+
+            if (view === 'month') {
+                // Display Year and Month
+                 // Use the start date as it represents the current month
+                const date = start.toDate();
+                dateRangeText = `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
+            } else if (view === 'week') {
+                 // Display Month and Day range
+                 const startMonth = start.toDate().getMonth() + 1;
+                 const startDay = start.toDate().getDate();
+                 const endMonth = end.toDate().getMonth() + 1;
+                 const endDay = end.toDate().getDate();
+                 // Check if the start and end months are the same
+                 if (startMonth === endMonth) {
+                      dateRangeText = `${startMonth}월 ${startDay}일 - ${endDay}일`;
+                 } else {
+                     dateRangeText = `${startMonth}월 ${startDay}일 - ${endMonth}월 ${endDay}일`;
+                 }
+            } else if (view === 'day') {
+                // Display Year, Month, and Day
+                const date = start.toDate();
+                 dateRangeText = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+            }
+
+            dateRangeDisplay.textContent = dateRangeText;
+        }
+
+         // Initial update of the date range display
+        updateDateRangeDisplay();
+
+
+        // --- Navigation Event Listeners ---
+
+        prevBtn.addEventListener('click', () => {
+            calendar.prev();
+            updateDateRangeDisplay();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            calendar.next();
+            updateDateRangeDisplay();
+        });
+
+        monthViewBtn.addEventListener('click', () => {
+            calendar.changeView('month', true); // The second arg 'true' preserves the date
+            updateDateRangeDisplay();
+        });
+
+        weekViewBtn.addEventListener('click', () => {
+            calendar.changeView('week', true);
+            updateDateRangeDisplay();
+        });
+
+        dayViewBtn.addEventListener('click', () => {
+            calendar.changeView('day', true);
+            updateDateRangeDisplay();
+        });
+
+        // --- Manual Add Event Button ---
+        addEventManuallyBtn.addEventListener('click', () => {
+             // Clear previous data
+            eventForm.reset();
+            eventIdInput.value = ''; // Ensure ID is empty for new event
+            eventCalendarIdInput.value = ''; // Ensure calendar ID is empty for new event
+
+            // Set default start/end times (e.g., current time + 1 hour)
+            const now = new Date();
+            const start = new Date(now.getTime() - now.getMinutes() % 30 * 60 * 1000 + 30 * 60 * 1000); // Round up to nearest half hour
+            const end = new Date(start.getTime() + 60 * 60 * 1000); // Add 1 hour
+            eventStartInput.value = start.toISOString().slice(0, 16); // Format for datetime-local
+            eventEndInput.value = end.toISOString().slice(0, 16); // Format for datetime-local
+
+            modalTitle.textContent = '새 일정 추가';
+            eventModal.style.display = 'flex'; // Use flex to center content
+        });
+
+
+        // --- Modal Control ---
+
+        closeModalBtn.addEventListener('click', () => {
+            eventModal.style.display = 'none';
+        });
+
+        cancelEventBtn.addEventListener('click', () => {
+             eventModal.style.display = 'none';
+        });
+
+        // Close the modal if the user clicks outside of it
+        window.addEventListener('click', (event) => {
+            if (event.target == eventModal) {
+                eventModal.style.display = 'none';
+            }
+        });
+
+
+        // --- Calendar Event Listeners ---
+
+        // Event triggered before creating an event via drag or click
+        calendar.on('beforeCreateEvent', (eventData) => {
+            // eventData contains information like start, end, isAllDay, guide.
+            console.log('beforeCreateEvent', eventData);
+
+            // Populate modal with initial data
+            eventForm.reset(); // Clear previous data
+            eventIdInput.value = ''; // Ensure ID is empty for new event
+             eventCalendarIdInput.value = eventData.calendarId || options.calendars[0].id; // Use selected calendar or default
+
+            modalTitle.textContent = '새 일정 추가';
+
+            eventTitleInput.value = eventData.title || ''; // If drag-creating, title might be empty
+
+            // Format dates for datetime-local input
+            eventStartInput.value = eventData.start.toDate().toISOString().slice(0, 16);
+            eventEndInput.value = eventData.end.toDate().toISOString().slice(0, 16);
+
+             // Set the correct calendar in the select box
+            eventCalendarSelect.value = eventData.calendarId || options.calendars[0].id;
+
+
+            // Show the modal
+            eventModal.style.display = 'flex'; // Use flex to center content
+
+            // Store the guide event data temporarily if needed for later use
+            // This is useful if you need to reference the original guide event
+            // However, for simple creation via form, we'll get data directly from the form on submit.
+            // If you wanted to use the guide event directly without the form, you'd create it here.
+            // calendar.createEvents([eventData]); // Example of direct creation without form
+        });
+
+         // Event triggered before updating an event via drag or resize
+        calendar.on('beforeUpdateEvent', (eventData) => {
+            console.log('beforeUpdateEvent', eventData);
+            const { event, changes } = eventData;
+
+            // Simply update the event in the calendar with the changes
+            // The changes object contains what was modified (start, end, calendarId, etc.)
+            calendar.updateEvent(event.id, event.calendarId, changes);
+        });
+
+
+        // Event triggered when clicking an event
+        calendar.on('clickEvent', (eventData) => {
+            console.log('clickEvent', eventData);
+            // Optional: Implement logic to open the modal for editing the event
+            // For this example, we'll just log, but you could populate the form
+            // with eventData.event and show the modal for editing.
+             const event = eventData.event;
+
+            // Populate modal for editing
+             eventForm.reset();
+             eventIdInput.value = event.id;
+             eventCalendarIdInput.value = event.calendarId;
+             modalTitle.textContent = '일정 수정';
+
+             eventTitleInput.value = event.title;
+             eventCalendarSelect.value = event.calendarId;
+
+             // Format dates for datetime-local input
+             // Ensure the dates are Moment.js objects or convert them
+             const startDate = event.start.toDate ? event.start.toDate() : new Date(event.start);
+             const endDate = event.end.toDate ? event.end.toDate() : new Date(event.end);
+
+             eventStartInput.value = startDate.toISOString().slice(0, 16);
+             eventEndInput.value = endDate.toISOString().slice(0, 16);
+
+            // Show the modal
+             eventModal.style.display = 'flex';
+
+        });
+
+
+        // Event triggered when clicking a date or time
+        calendar.on('clickDateTime', (eventData) => {
+             console.log('clickDateTime', eventData);
+            // The beforeCreateEvent handler is typically sufficient for handling clicks on empty slots.
+            // If you wanted different behavior for simple clicks vs drag-creation, you could use this.
+        });
+
+
+        // --- Form Submission for Event Creation/Update ---
+        eventForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const id = eventIdInput.value;
+            const calendarId = eventCalendarSelect.value; // Get calendar ID from select
+            const title = eventTitleInput.value;
+            const start = new Date(eventStartInput.value);
+            const end = new Date(eventEndInput.value);
+
+            // Get the background color for the selected calendar
+            const calendarInfo = options.calendars.find(cal => cal.id === calendarId);
+            const backgroundColor = calendarInfo ? calendarInfo.backgroundColor : '#000'; // Default if not found
+            const borderColor = calendarInfo ? calendarInfo.borderColor : '#000';
+
+
+            if (id) {
+                // Existing event - update
+                calendar.updateEvent(id, eventCalendarIdInput.value, { // Use original calendar ID for lookup
+                     calendarId: calendarId, // Apply the potentially new calendar ID
+                     title: title,
+                     start: start,
+                     end: end,
+                     backgroundColor: backgroundColor,
+                     borderColor: borderColor,
+                     // Add other properties you might want to update
+                });
+                 console.log('Event updated:', id);
+            } else {
+                // New event - create
+                 const newEvent = {
+                    id: String(Math.random() * 1e9), // Simple unique ID generation
+                    calendarId: calendarId,
+                    title: title,
+                    start: start,
+                    end: end,
+                    backgroundColor: backgroundColor,
+                    borderColor: borderColor,
+                     // isAllDay: false, // or calculate based on start/end
+                 };
+                 calendar.createEvents([newEvent]);
+                 console.log('New event created:', newEvent);
+            }
+
+            // Hide the modal
+            eventModal.style.display = 'none';
+        });
+
+
+        // --- Add Initial Events (Example) ---
+         calendar.createEvents([
+             {
+                id: 'event1',
+                calendarId: 'cal1', // Assuming 'cal1' exists
+                title: '점심 약속',
+                 start: '2025-04-21T12:00:00', // Use ISO 8601 format
+                 end: '2025-04-21T13:00:00',
+                 // backgroundColor, borderColor, color will be picked up from calendar config
+             },
+             {
+                 id: 'event2',
+                calendarId: 'cal2', // Assuming 'cal2' exists
+                 title: '업무 회의',
+                 start: '2025-04-23T10:00:00',
+                 end: '2025-04-23T11:30:00',
+             },
+             {
+                 id: 'event3',
+                 calendarId: 'cal1',
+                 title: '종일 일정',
+                 start: '2025-04-25', // Just date for all day
+                 end: '2025-04-25',
+                 isAllDay: true,
+             },
+             {
+                 id: 'event4',
+                 calendarId: 'cal3',
+                 title: '운동',
+                 start: '2025-04-26T18:00:00',
+                 end: '2025-04-26T19:00:00',
+             }
+         ]);
+
+         // Optional: Adjust calendar height after initial rendering
+         calendar.render();
+
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "seal-sharitive",
+  "version": "0.0.1",
+  "description": "Seal Sharitive | tools for sharing datas securely",
+  "keywords": [],
+  "license": "Apache-2.0",
+  "author": "SealKit",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "multer": "^1.4.5-lts.2",
+    "sqlite3": "^5.1.7",
+    "uuid": "^11.1.0"
+  }
+}

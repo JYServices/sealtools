@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Convert temperatures effortlessly with our modern temperature converter. Supports Celsius, Fahrenheit, Kelvin, and more.">
+    <meta name="keywords" content="temperature converter, Celsius to Fahrenheit, Kelvin to Celsius, temperature conversion tool">
+    <meta name="author" content="Your Name or Company">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Modern Temperature Converter">
+    <meta property="og:description" content="Effortlessly convert between various temperature units with our user-friendly tool.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourwebsite.com/temperature-converter">
+    <meta property="og:image" content="https://yourwebsite.com/images/temperature-converter-thumbnail.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Modern Temperature Converter">
+    <meta name="twitter:description" content="Easily convert temperatures between Celsius, Fahrenheit, Kelvin, and more.">
+    <meta name="twitter:image" content="https://yourwebsite.com/images/temperature-converter-thumbnail.png">
+    <title>Modern Temperature Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Tailwind gray-50 */
+        }
+        .converter-card {
+            background-color: white;
+            border-radius: 1rem; /* lg */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* lg */
+            padding: 2rem; /* p-8 */
+            transition: all 0.3s ease-in-out;
+        }
+        .converter-card:hover {
+             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* xl */
+        }
+        .input-field, .select-field {
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-radius: 0.5rem; /* md */
+            padding: 0.75rem 1rem; /* py-3 px-4 */
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            width: 100%;
+            font-size: 1rem;
+        }
+        .input-field:focus, .select-field:focus {
+            outline: none;
+            border-color: #3b82f6; /* blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        .result-display {
+            background-color: #f3f4f6; /* gray-100 */
+            border-radius: 0.5rem; /* md */
+            padding: 1.5rem; /* p-6 */
+            text-align: center;
+            margin-top: 1rem; /* mt-4 */
+            transition: background-color 0.3s ease;
+        }
+        .result-value {
+            font-size: 2.25rem; /* 3xl */
+            font-weight: 700; /* bold */
+            color: #1e40af; /* blue-800 */
+            line-height: 1.2;
+        }
+        .result-unit {
+            font-size: 1rem; /* base */
+            color: #6b7280; /* gray-500 */
+            margin-top: 0.25rem; /* mt-1 */
+        }
+        .swap-button {
+            background-color: #e5e7eb; /* gray-200 */
+            color: #4b5563; /* gray-600 */
+            border-radius: 9999px; /* full */
+            width: 2.5rem; /* w-10 */
+            height: 2.5rem; /* h-10 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            cursor: pointer;
+        }
+        .swap-button:hover {
+            background-color: #d1d5db; /* gray-300 */
+            transform: rotate(180deg);
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #3b82f6; /* blue-500 */
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .info-section h3 {
+            font-size: 1.25rem; /* xl */
+            font-weight: 600; /* semibold */
+            color: #1f2937; /* gray-800 */
+            margin-bottom: 0.75rem; /* mb-3 */
+        }
+        .info-section p, .info-section li {
+            color: #4b5563; /* gray-600 */
+            line-height: 1.6;
+        }
+        .info-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+         .info-section li {
+            margin-bottom: 0.5rem; /* mb-2 */
+            padding-left: 1.5rem; /* pl-6 */
+            position: relative;
+        }
+        .info-section li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #3b82f6; /* blue-500 */
+            font-weight: bold;
+            font-size: 1.2em;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <div class="container mx-auto px-4 py-8 md:py-16 max-w-4xl">
+
+        <header class="text-center mb-10 md:mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-700 mb-3">Modern Temperature Converter</h1>
+            <p class="text-lg md:text-xl text-gray-600">Effortlessly convert between various temperature units.</p>
+        </header>
+
+        <div class="converter-card mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-11 gap-4 md:gap-6 items-end">
+                <div class="md:col-span-4">
+                    <label for="inputValue" class="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                    <input type="number" id="inputValue" value="0" class="input-field" placeholder="Enter temperature">
+                </div>
+
+                <div class="md:col-span-3">
+                    <label for="fromUnit" class="block text-sm font-medium text-gray-700 mb-1">From</label>
+                    <select id="fromUnit" class="select-field appearance-none bg-white">
+                        </select>
+                </div>
+
+                <div class="flex justify-center items-end h-full md:col-span-1 pb-3">
+                   <button id="swapButton" class="swap-button" title="Swap Units">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h18m-7.5-14L21 7.5m0 0L16.5 12M21 7.5H3" />
+                        </svg>
+                   </button>
+                </div>
+
+                <div class="md:col-span-3">
+                    <label for="toUnit" class="block text-sm font-medium text-gray-700 mb-1">To</label>
+                    <select id="toUnit" class="select-field appearance-none bg-white">
+                        </select>
+                </div>
+            </div>
+
+            <div class="mt-6 flex items-center justify-between">
+                 <div class="flex items-center space-x-2">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="detailedConvertToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="text-sm text-gray-600">Detailed Conversion Steps (Beta)</span>
+                </div>
+            </div>
+
+            <div id="result" class="result-display mt-6">
+                <div class="result-value">-</div>
+                <div class="result-unit">Select units and enter value</div>
+            </div>
+             <div id="detailedResult" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700 hidden">
+                Detailed steps will appear here.
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="info-section bg-white p-6 rounded-lg shadow-sm">
+                <h3>About Temperature Conversion</h3>
+                <p>This modern and user-friendly temperature converter allows you to easily convert between various temperature scales. Simply enter the value, select the original unit, and the desired unit to convert to. The result will be displayed instantly.</p>
+                <p class="mt-4">Whether you're a scientist, student, traveler, or just curious, this tool provides a quick and accurate way to convert temperatures for various purposes.</p>
+            </div>
+
+            <div class="info-section bg-white p-6 rounded-lg shadow-sm">
+                <h3>Supported Units</h3>
+                <ul>
+                    <li><strong>Celsius (°C):</strong> Based on the freezing point of water at 0°C and the boiling point at 100°C.</li>
+                    <li><strong>Fahrenheit (°F):</strong> Based on the freezing point of water at 32°F and the boiling point at 212°F.</li>
+                    <li><strong>Kelvin (K):</strong> The absolute thermodynamic temperature scale, with 0 K being absolute zero.</li>
+                    <li><strong>Rankine (°R):</strong> An absolute thermodynamic temperature scale where zero degrees Rankine is absolute zero. Uses Fahrenheit scale intervals.</li>
+                    <li><strong>Delisle (°De):</strong> A temperature scale where the boiling point of water is 0 °De and the freezing point is 150 °De.</li>
+                    <li><strong>Newton (°N):</strong> A temperature scale where the freezing point of water is 0 °N and the boiling point is 33 °N.</li>
+                    <li><strong>Réaumur (°Ré):</strong> A temperature scale where the freezing point of water is 0 °Ré and the boiling point is 80 °Ré.</li>
+                    <li><strong>Rømer (°Rø):</strong> A temperature scale where the freezing point of water is 7.5 °Rø and the boiling point is 60 °Rø.</li>
+                </ul>
+            </div>
+        </div>
+
+        <footer class="text-center mt-12 text-gray-500 text-sm">
+            Built with Tailwind CSS and ❤️.
+        </footer>
+
+    </div>
+
+    <script>
+        const units = {
+            C: { name: 'Celsius', symbol: '°C' },
+            F: { name: 'Fahrenheit', symbol: '°F' },
+            K: { name: 'Kelvin', symbol: 'K' },
+            R: { name: 'Rankine', symbol: '°R' },
+            De: { name: 'Delisle', symbol: '°De' },
+            N: { name: 'Newton', symbol: '°N' },
+            Re: { name: 'Réaumur', symbol: '°Ré' },
+            Ro: { name: 'Rømer', symbol: '°Rø' }
+        };
+
+        const inputValue = document.getElementById('inputValue');
+        const fromUnitSelect = document.getElementById('fromUnit');
+        const toUnitSelect = document.getElementById('toUnit');
+        const resultDiv = document.getElementById('result');
+        const resultValueDiv = resultDiv.querySelector('.result-value');
+        const resultUnitDiv = resultDiv.querySelector('.result-unit');
+        const swapButton = document.getElementById('swapButton');
+        const detailedToggle = document.getElementById('detailedConvertToggle');
+        const detailedResultDiv = document.getElementById('detailedResult');
+
+        // Populate dropdowns
+        function populateDropdowns() {
+            for (const key in units) {
+                const optionFrom = document.createElement('option');
+                optionFrom.value = key;
+                optionFrom.textContent = `${units[key].name} (${units[key].symbol})`;
+                fromUnitSelect.appendChild(optionFrom);
+
+                const optionTo = document.createElement('option');
+                optionTo.value = key;
+                optionTo.textContent = `${units[key].name} (${units[key].symbol})`;
+                toUnitSelect.appendChild(optionTo);
+            }
+            // Set default values
+            fromUnitSelect.value = 'C';
+            toUnitSelect.value = 'F';
+        }
+
+        // Conversion Logic
+        function convertToCelsius(value, fromUnit) {
+            switch (fromUnit) {
+                case 'C': return value;
+                case 'F': return (value - 32) * 5 / 9;
+                case 'K': return value - 273.15;
+                case 'R': return (value - 491.67) * 5 / 9;
+                case 'De': return 100 - (value * 2 / 3);
+                case 'N': return value * 100 / 33;
+                case 'Re': return value * 5 / 4;
+                case 'Ro': return (value - 7.5) * 40 / 21;
+                default: return NaN;
+            }
+        }
+
+        function convertFromCelsius(value, toUnit) {
+            switch (toUnit) {
+                case 'C': return value;
+                case 'F': return (value * 9 / 5) + 32;
+                case 'K': return value + 273.15;
+                case 'R': return (value + 273.15) * 9 / 5;
+                case 'De': return (100 - value) * 3 / 2;
+                case 'N': return value * 33 / 100;
+                case 'Re': return value * 4 / 5;
+                case 'Ro': return (value * 21 / 40) + 7.5;
+                default: return NaN;
+            }
+        }
+
+        function formatResult(value) {
+            if (isNaN(value)) return '-';
+            // Show more precision for smaller numbers, less for larger ones
+            const absValue = Math.abs(value);
+            let decimalPlaces;
+            if (absValue === 0) {
+                decimalPlaces = 0;
+            } else if (absValue < 0.01) {
+                decimalPlaces = 5;
+            } else if (absValue < 1) {
+                decimalPlaces = 4;
+            } else if (absValue < 100) {
+                decimalPlaces = 2;
+            } else if (absValue < 10000) {
+                decimalPlaces = 1;
+            } else {
+                decimalPlaces = 0; // Or use scientific notation for very large/small
+            }
+
+            // Use Number.toLocaleString for better formatting potentially
+            let formatted = parseFloat(value.toFixed(decimalPlaces));
+            return formatted.toLocaleString(undefined, { maximumFractionDigits: decimalPlaces });
+
+        }
+
+        function performConversion() {
+            const value = parseFloat(inputValue.value);
+            const fromUnit = fromUnitSelect.value;
+            const toUnit = toUnitSelect.value;
+
+            if (isNaN(value)) {
+                resultValueDiv.textContent = '-';
+                resultUnitDiv.textContent = 'Please enter a valid number';
+                resultDiv.classList.add('bg-red-100');
+                resultDiv.classList.remove('bg-gray-100');
+                return;
+            }
+
+            resultDiv.classList.remove('bg-red-100');
+            resultDiv.classList.add('bg-gray-100');
+
+            const valueInCelsius = convertToCelsius(value, fromUnit);
+            const convertedValue = convertFromCelsius(valueInCelsius, toUnit);
+
+            resultValueDiv.textContent = formatResult(convertedValue);
+            resultUnitDiv.textContent = `${units[toUnit].name} (${units[toUnit].symbol})`;
+
+            // Update detailed view (placeholder)
+            if (detailedToggle.checked) {
+                updateDetailedView(value, fromUnit, convertedValue, toUnit, valueInCelsius);
+            }
+        }
+
+        function updateDetailedView(valIn, unitIn, valOut, unitOut, valC) {
+             if (isNaN(valIn) || isNaN(valOut)) {
+                detailedResultDiv.innerHTML = 'Cannot show details for invalid input.';
+                return;
+             }
+
+             let steps = `<p class="font-semibold mb-2">Conversion Steps (${units[unitIn].symbol} to ${units[unitOut].symbol}):</p>`;
+             if (unitIn === unitOut) {
+                 steps += `<p>Input and output units are the same.</p><p>${formatResult(valIn)} ${units[unitIn].symbol} = ${formatResult(valOut)} ${units[unitOut].symbol}</p>`;
+             } else if (unitIn === 'C') {
+                 steps += `<p>1. Start with Celsius: ${formatResult(valIn)} °C</p>`;
+                 steps += `<p>2. Convert to ${units[unitOut].name}: ${getFormulaHtml('C', unitOut, valIn)} = ${formatResult(valOut)} ${units[unitOut].symbol}</p>`;
+             } else if (unitOut === 'C') {
+                 steps += `<p>1. Convert ${units[unitIn].name} to Celsius: ${getFormulaHtml(unitIn, 'C', valIn)} = ${formatResult(valOut)} °C</p>`;
+             } else {
+                 steps += `<p>1. Convert ${units[unitIn].name} to Celsius: ${getFormulaHtml(unitIn, 'C', valIn)} = ${formatResult(valC)} °C</p>`;
+                 steps += `<p>2. Convert Celsius to ${units[unitOut].name}: ${getFormulaHtml('C', unitOut, valC)} = ${formatResult(valOut)} ${units[unitOut].symbol}</p>`;
+             }
+             detailedResultDiv.innerHTML = steps;
+        }
+
+        function getFormulaHtml(from, to, value) {
+            // Basic formula representation - could be more elaborate
+            switch (`${from}-${to}`) {
+                case 'F-C': return `(${formatResult(value)} - 32) * 5 / 9`;
+                case 'K-C': return `${formatResult(value)} - 273.15`;
+                case 'R-C': return `(${formatResult(value)} - 491.67) * 5 / 9`;
+                case 'De-C': return `100 - (${formatResult(value)} * 2 / 3)`;
+                case 'N-C': return `${formatResult(value)} * 100 / 33`;
+                case 'Re-C': return `${formatResult(value)} * 5 / 4`;
+                case 'Ro-C': return `(${formatResult(value)} - 7.5) * 40 / 21`;
+                case 'C-F': return `(${formatResult(value)} * 9 / 5) + 32`;
+                case 'C-K': return `${formatResult(value)} + 273.15`;
+                case 'C-R': return `(${formatResult(value)} + 273.15) * 9 / 5`;
+                case 'C-De': return `(100 - ${formatResult(value)}) * 3 / 2`;
+                case 'C-N': return `${formatResult(value)} * 33 / 100`;
+                case 'C-Re': return `${formatResult(value)} * 4 / 5`;
+                case 'C-Ro': return `(${formatResult(value)} * 21 / 40) + 7.5`;
+                default: return `Conversion from ${from} to ${to}`; // Fallback
+            }
+        }
+
+
+        // Event Listeners
+        inputValue.addEventListener('input', performConversion);
+        fromUnitSelect.addEventListener('change', performConversion);
+        toUnitSelect.addEventListener('change', performConversion);
+
+        swapButton.addEventListener('click', () => {
+            const temp = fromUnitSelect.value;
+            fromUnitSelect.value = toUnitSelect.value;
+            toUnitSelect.value = temp;
+            performConversion(); // Re-calculate after swap
+        });
+
+        detailedToggle.addEventListener('change', () => {
+            if (detailedToggle.checked) {
+                detailedResultDiv.classList.remove('hidden');
+                performConversion(); // Update details immediately
+            } else {
+                detailedResultDiv.classList.add('hidden');
+            }
+        });
+
+        // Initial setup
+        populateDropdowns();
+        performConversion(); // Perform initial conversion for default values
+
+    </script>
+
+</body>
+</html>

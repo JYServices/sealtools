@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Custom Short URL</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        body { font-family: sans-serif; background: #f8fafc; margin: 0; padding: 2em; }
+        .container { max-width: 400px; margin: 2em auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 2em; }
+        label { display: block; margin-top: 1em; }
+        input[type="text"], input[type="url"] { width: 100%; padding: 0.5em; margin-top: 0.25em; }
+        button { margin-top: 1.5em; padding: 0.7em 2em; background: #6366f1; color: #fff; border: none; border-radius: 4px; font-size: 1em; }
+        .result { margin-top: 2em; background: #f1f5f9; padding: 1em; border-radius: 6px; word-break: break-all; }
+        .error { color: #dc2626; margin-top: 1em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Shorten a URL <strong>absolutely custom.</strong></h2>
+        <form id="shorten-form">
+            <label>
+                Custom Alias (e.g. <b>my-link</b>):
+                <input type="text" id="alias" name="alias" required pattern="^[a-zA-Z0-9\-_]+$" maxlength="64" autocomplete="off">
+            </label>
+            <label>
+                Target URL:
+                <input type="url" id="url" name="url" required placeholder="https://example.com">
+            </label>
+            <button type="submit">Create Short Link</button>
+        </form>
+        <div class="result" id="result" style="display:none"></div>
+        <div style="margin-top:1em;display:none" id="qr-container">
+            <canvas id="qrcode"></canvas>
+            <br>
+            <button id="download-qr" style="margin-top:0.5em;display:none">Download QR Code</button>
+        </div>
+        <div class="error" id="error" style="display:none"></div>
+        <div id="history-container" style="margin-top:2em;">
+            <h3 style="margin-bottom:0.5em;">History</h3>
+            <ul id="history-list" style="list-style:none;padding:0;margin:0;"></ul>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        const qrCanvas = document.getElementById('qrcode');
+        const qrContainer = document.getElementById('qr-container');
+        const downloadBtn = document.getElementById('download-qr');
+        let lastShortUrl = '';
+
+        // Load and render history from localStorage
+        function renderHistory() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            let items = [];
+            try {
+                items = JSON.parse(localStorage.getItem('shortUrlHistory') || '[]');
+            } catch {}
+            if (!items.length) {
+                historyList.innerHTML = '<li style="color:#888;">No history yet.</li>';
+                return;
+            }
+            items.slice().reverse().forEach(item => {
+                const li = document.createElement('li');
+                li.style.marginBottom = '0.5em';
+                li.innerHTML = `<a href="${item.shortUrl}" target="_blank">${item.shortUrl}</a> <span style="color:#888;">(${item.alias})</span>`;
+                historyList.appendChild(li);
+            });
+        }
+
+        // Save a new entry to localStorage
+        function saveToHistory(alias, shortUrl) {
+            let items = [];
+            try {
+                items = JSON.parse(localStorage.getItem('shortUrlHistory') || '[]');
+            } catch {}
+            // Remove duplicates by alias
+            items = items.filter(i => i.alias !== alias);
+            items.push({ alias, shortUrl });
+            // Limit to last 20 entries
+            if (items.length > 20) items = items.slice(items.length - 20);
+            localStorage.setItem('shortUrlHistory', JSON.stringify(items));
+        }
+
+        renderHistory();
+
+        document.getElementById('shorten-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            qrContainer.style.display = 'none';
+            downloadBtn.style.display = 'none';
+
+            const alias = document.getElementById('alias').value.trim();
+            let url = document.getElementById('url').value.trim();
+
+            if (!alias || !url) return;
+
+            // Auto-add protocol if missing
+            if (!/^https?:\/\//i.test(url)) {
+                url = 'https://' + url;
+            }
+
+            try {
+                const res = await fetch('/u', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alias, url })
+                });
+                const data = await res.json();
+                if (res.ok && data.shortUrl) {
+                    document.getElementById('result').innerHTML = 
+                        `Short URL: <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a>`;
+                    document.getElementById('result').style.display = '';
+
+                    // Clear previous QR code
+                    const ctx = qrCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, qrCanvas.width, qrCanvas.height);
+
+                    // Generate QR code
+                    QRCode.toCanvas(qrCanvas, data.shortUrl, { width: 200 }, function (error) {
+                        if (!error) {
+                            qrContainer.style.display = '';
+                            downloadBtn.style.display = '';
+                            lastShortUrl = data.shortUrl;
+                        } else {
+                            document.getElementById('error').textContent = 'QR code generation failed.';
+                            document.getElementById('error').style.display = '';
+                        }
+                    });
+
+                    saveToHistory(alias, data.shortUrl);
+                    renderHistory();
+                } else {
+                    document.getElementById('error').textContent = data.error || 'Error creating short URL.';
+                    document.getElementById('error').style.display = '';
+                }
+            } catch (err) {
+                console.log(err);
+                console.log('[ToolSeal Error Check System] Error creating short URL. Please check the server logs for more details.');
+            }
+        });
+
+        downloadBtn.onclick = function() {
+            if (!lastShortUrl) return;
+            const link = document.createElement('a');
+            link.download = `qr-${document.getElementById('alias').value.trim() || 'shorturl'}.png`;
+            link.href = qrCanvas.toDataURL('image/png');
+            link.click();
+        };
+    </script>
+</body>
+</html>

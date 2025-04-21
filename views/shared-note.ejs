@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Note</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .content-editable { min-height: 250px; outline: 0; }
+        .content-editable[contenteditable=false] { background-color: #f8f9fa; cursor: not-allowed; color: #6c757d; }
+        .status-message { padding: .75rem 1rem; margin-top: 1rem; border-radius: .375rem; font-size: .875rem; font-weight: 500; }
+        .status-success { background-color: #d1fae5; color: #065f46; }
+        .status-error { background-color: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body class="p-4 bg-gradient-to-br flex font-sans from-gray-50 items-center justify-center min-h-screen text-gray-800 to-indigo-100">
+    <div class="bg-white container max-w-2xl mx-auto p-8 rounded-2xl shadow-xl sm:p-10">
+        <h1 class="font-bold mb-6 text-3xl text-center text-gray-800">Shared Note</h1>
+        <% if (password) { %>
+        <div id="password-section">
+            <p class="mb-4 text-center text-gray-600">This note requires a password for access.</p>
+            <input aria-label="Password" class="focus:ring-2 rounded-lg w-full border border-gray-300 duration-200 focus:ring-indigo-300 transition block focus:border-indigo-500 mb-4 px-4 py-3 shadow-sm" id="password-input" placeholder="Enter password" type="password">
+            <button class="focus:ring-2 rounded-lg w-full bg-gradient-to-r duration-300 ease-in-out focus:outline-none focus:ring-opacity-75 font-bold hover:shadow-lg shadow-md text-white transition-all focus:ring-indigo-500 from-indigo-600 hover:from-indigo-700 hover:to-purple-700 px-4 py-3 to-purple-600" id="password-submit">Unlock Note</button>
+            <p class="hidden mt-3 text-center text-red-600 text-sm" id="password-error">Incorrect password. Please try again.</p>
+        </div>
+        <% } %>
+        <div id="note-section" class="<%= password ? 'hidden' : '' %>">
+            <h2 class="mb-4 font-semibold text-gray-700 text-xl">Note Content <span class="text-sm font-normal ml-2 text-gray-500" id="permission-status"></span></h2>
+            <div class="focus:ring-2 rounded-lg w-full border border-gray-300 duration-200 focus:ring-indigo-300 transition content-editable focus:border-indigo-400 p-4" id="note-content" contenteditable="<%= permissions === 'edit' %>"><%- content %></div>
+            <div class="mt-4" id="status-area"></div>
+            <% if (permissions === 'edit') { %>
+                <button class="focus:ring-2 rounded-lg w-full bg-gradient-to-r duration-300 ease-in-out focus:outline-none focus:ring-opacity-75 font-bold hover:shadow-lg shadow-md text-white transition-all disabled:cursor-not-allowed disabled:opacity-60 float-right focus:ring-green-500 from-green-500 hover:from-green-600 hover:to-emerald-700 mt-6 px-6 py-2.5 sm:w-auto to-emerald-600" id="save-note">Save Changes</button>
+            <% } %>
+        </div>
+    </div>
+    <script>
+        // --- Elements ---
+        const passwordSection = document.getElementById('password-section');
+        const noteSection = document.getElementById('note-section');
+        const passwordInput = document.getElementById('password-input');
+        const passwordSubmit = document.getElementById('password-submit');
+        const passwordError = document.getElementById('password-error');
+        const noteContent = document.getElementById('note-content');
+        const saveNoteButton = document.getElementById('save-note');
+        const permissionStatus = document.getElementById('permission-status');
+        const statusArea = document.getElementById('status-area');
+
+        // --- Backend Variables ---
+        const requiresPassword = <%= JSON.stringify(!!password) %>;
+        const correctPassword = <%= JSON.stringify(password || "") %>;
+        const userPermissions = <%= JSON.stringify(permissions || "view") %>;
+        const shareId = <%= JSON.stringify(shareId) %>;
+
+        // --- Functions ---
+        function showSection(sectionToShow) {
+            if (passwordSection) passwordSection.classList.add('hidden');
+            noteSection.classList.add('hidden');
+            sectionToShow.classList.remove('hidden');
+        }
+
+        function displayStatus(message, type = 'success', duration = 3000) {
+            statusArea.innerHTML = '';
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+            messageDiv.className = `status-message ${type === 'success' ? 'status-success' : 'status-error'}`;
+            statusArea.appendChild(messageDiv);
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (messageDiv.parentNode === statusArea) {
+                        statusArea.removeChild(messageDiv);
+                    }
+                }, duration);
+            }
+        }
+
+        // --- Initialization Logic ---
+        if (!requiresPassword) {
+            showSection(noteSection);
+            if (userPermissions === 'edit') {
+                noteContent.contentEditable = 'true';
+                permissionStatus.textContent = '(Editing enabled)';
+            } else {
+                noteContent.contentEditable = 'false';
+                permissionStatus.textContent = '(View only)';
+            }
+        } else {
+            showSection(passwordSection);
+        }
+
+        // --- Event Listeners ---
+        if (passwordSubmit) {
+            passwordSubmit.addEventListener('click', () => {
+                passwordError.classList.add('hidden');
+                if (passwordInput.value === correctPassword) {
+                    showSection(noteSection);
+                    if (userPermissions === 'edit') {
+                        noteContent.contentEditable = 'true';
+                        permissionStatus.textContent = '(Editing enabled)';
+                    } else {
+                        noteContent.contentEditable = 'false';
+                        permissionStatus.textContent = '(View only)';
+                    }
+                } else {
+                    passwordError.classList.remove('hidden');
+                    passwordInput.focus();
+                }
+            });
+            passwordInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    passwordSubmit.click();
+                }
+            });
+        }
+
+        if (saveNoteButton) {
+            saveNoteButton.addEventListener('click', async () => {
+                saveNoteButton.disabled = true;
+                saveNoteButton.textContent = 'Saving...';
+                statusArea.innerHTML = '';
+
+                try {
+                    const response = await fetch(`/api/notes/${shareId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: noteContent.innerHTML })
+                    });
+
+                    if (!response.ok) {
+                        let errorMsg = 'Failed to save note.';
+                        try {
+                            const errorData = await response.json();
+                            errorMsg = errorData.message || errorMsg;
+                        } catch (e) { }
+                        throw new Error(errorMsg);
+                    }
+
+                    displayStatus('Note saved successfully!', 'success');
+                    noteContent.classList.add('border-green-500');
+                    setTimeout(() => noteContent.classList.remove('border-green-500'), 1000);
+
+                } catch (err) {
+                    console.error('Error saving note:', err);
+                    displayStatus(`Error: ${err.message}`, 'error', 0);
+                } finally {
+                    saveNoteButton.disabled = false;
+                    saveNoteButton.textContent = 'Save Changes';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+<!-- This file is part of the Note Sharing App. It is licensed under the MIT License. -->
+<!-- For more information, see the LICENSE file in the root of this repository. -->
+

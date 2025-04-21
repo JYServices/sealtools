@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToolSeal | Fast Web Folder Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Optional: Add custom base styles or overrides */
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Style for the custom file input area */
+        .file-input-area {
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Hide the default file input visually but keep it accessible */
+        .sr-only {
+           position: absolute;
+           width: 1px;
+           height: 1px;
+           padding: 0;
+           margin: -1px;
+           overflow: hidden;
+           clip: rect(0, 0, 0, 0);
+           white-space: nowrap;
+           border-width: 0;
+        }
+
+         /* Simple pulsing animation for uploading state */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+        .animate-pulse-subtle {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+    </style>
+</head>
+<body class="font-sans bg-gradient-to-br from-gray-50 to-indigo-100 text-gray-800 min-h-screen flex items-center justify-center p-4">
+
+    <div class="container max-w-lg mx-auto bg-white p-8 sm:p-10 rounded-2xl shadow-xl">
+        <h1 class="text-3xl font-bold mb-8 text-center text-gray-700">Upload Your Folder</h1>
+
+        <form id="upload-form" class="space-y-8">
+            <div>
+                <label for="file-input" class="file-input-area cursor-pointer border-2 border-dashed border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50 rounded-lg p-8 flex flex-col items-center justify-center text-center transition duration-300 ease-in-out">
+                    <svg class="w-12 h-12 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+
+                    <span class="text-indigo-600 font-semibold mb-2 block">Click to select folder or Drag and Drop</span>
+                    <span id="selected-folder-info" class="text-gray-500 text-sm italic">No folder chosen</span>
+
+                     <input type="file" id="file-input" webkitdirectory directory multiple class="sr-only">
+                </label>
+            </div>
+
+             <button type="submit" id="submit-button" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center space-x-2">
+                <svg id="upload-button-icon" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.34 0 4.5 4.5 0 01-1.41 8.775H6.75z" />
+                </svg>
+                <span id="upload-button-text">Upload Files</span>
+             </button>
+        </form>
+
+        <div id="progress-container" class="mt-8" style="display: none;">
+             <div class="flex justify-between mb-1">
+                <span id="upload-status" class="text-sm font-medium text-indigo-700">Uploading...</span>
+                <span id="progress-percentage" class="text-sm font-medium text-indigo-700">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div id="progress-bar-inner" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div id="result-area" class="mt-6 text-center" style="display: none;">
+             <p id="status-message" class="text-sm"></p>
+             <a id="download-link" href="#" target="_blank" class="inline-flex items-center justify-center mt-4 px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-sm transition duration-300 ease-in-out" style="display: none;">
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12l-4.5 4.5m0 0l-4.5-4.5m4.5 4.5V3" />
+                </svg>
+                Download Files
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const selectedFolderInfo = document.getElementById('selected-folder-info');
+        const submitButton = document.getElementById('submit-button');
+        const uploadButtonText = document.getElementById('upload-button-text');
+        const uploadButtonIcon = document.getElementById('upload-button-icon');
+
+        const progressContainer = document.getElementById('progress-container');
+        const progressBarInner = document.getElementById('progress-bar-inner');
+        const uploadStatus = document.getElementById('upload-status');
+        const progressPercentage = document.getElementById('progress-percentage');
+
+        const resultArea = document.getElementById('result-area');
+        const statusMessage = document.getElementById('status-message');
+        const downloadLink = document.getElementById('download-link');
+
+        // --- UI Update Functions ---
+
+        function showProgress(percentage) {
+            const percent = Math.round(percentage);
+            progressBarInner.style.width = `${percent}%`;
+            progressPercentage.textContent = `${percent}%`;
+            progressContainer.style.display = 'block';
+        }
+
+        function hideProgress() {
+            progressContainer.style.display = 'none';
+            progressBarInner.style.width = '0%';
+            progressPercentage.textContent = '0%';
+        }
+
+        function showResult(message, isSuccess, linkData = null) {
+            resultArea.style.display = 'block';
+            statusMessage.textContent = message;
+            statusMessage.className = `text-sm ${isSuccess ? 'text-green-700' : 'text-red-600'}`;
+
+            if (isSuccess && linkData) {
+                downloadLink.href = linkData.link;
+                downloadLink.textContent = 'Download Files'; // Simplified text
+                // downloadLink.textContent = `Download Folder (ID: ${linkData.uuid})`; // Alternative with UUID
+                downloadLink.style.display = 'inline-flex';
+            } else {
+                downloadLink.style.display = 'none';
+            }
+        }
+
+        function hideResult() {
+            resultArea.style.display = 'none';
+            statusMessage.textContent = '';
+            downloadLink.style.display = 'none';
+            downloadLink.href = '#';
+        }
+
+        function setButtonState(isLoading, text = 'Upload Files') {
+             submitButton.disabled = isLoading;
+             uploadButtonText.textContent = text;
+             if (isLoading) {
+                // Optional: Add a spinner or change icon
+                submitButton.classList.add('animate-pulse-subtle'); // Subtle pulse
+                uploadButtonIcon.innerHTML = `
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>`;
+             } else {
+                 submitButton.classList.remove('animate-pulse-subtle');
+                 // Restore original icon
+                 uploadButtonIcon.innerHTML = `
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.34 0 4.5 4.5 0 01-1.41 8.775H6.75z" />
+                    </svg>`;
+             }
+        }
+
+        function resetUI() {
+            hideProgress();
+            hideResult();
+            setButtonState(false, 'Upload Files');
+            selectedFolderInfo.textContent = 'No folder chosen';
+            selectedFolderInfo.className = 'text-gray-500 text-sm italic';
+            // fileInput.value = ''; // Reset file input if desired (can be tricky across browsers)
+        }
+
+        // --- Event Listeners ---
+
+        fileInput.addEventListener('change', () => {
+            hideResult(); // Clear previous results when a new folder is selected
+            hideProgress();
+            setButtonState(false, 'Upload Files');
+
+            if (fileInput.files.length > 0) {
+                // Try to get the folder name from the relative path of the first file
+                let folderName = 'Selected folder'; // Default
+                if (fileInput.files[0].webkitRelativePath) {
+                    folderName = fileInput.files[0].webkitRelativePath.split('/')[0];
+                }
+                 selectedFolderInfo.textContent = `${folderName} (${fileInput.files.length} files)`;
+                 selectedFolderInfo.className = 'text-indigo-700 text-sm font-medium'; // Change style
+            } else {
+                selectedFolderInfo.textContent = 'No folder chosen';
+                selectedFolderInfo.className = 'text-gray-500 text-sm italic';
+            }
+        });
+
+        uploadForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const files = fileInput.files;
+
+            if (files.length === 0) {
+                showResult('Please select a folder first.', false);
+                return;
+            }
+
+            // Prepare form data
+            const formData = new FormData();
+            for (const file of files) {
+                // Ensure relative path is used for folder structure
+                formData.append('files', file, file.webkitRelativePath || file.name);
+            }
+
+            // --- Start Upload ---
+            hideResult();
+            setButtonState(true, 'Uploading...');
+            showProgress(0); // Show progress bar starting at 0
+            uploadStatus.textContent = 'Initializing upload...';
+
+            try {
+                // ** SIMULATED UPLOAD PROGRESS - Replace with actual XHR progress **
+                // In a real scenario, you'd use XMLHttpRequest to get progress events
+                // For this demo, we'll simulate progress.
+                await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+                showProgress(10);
+                uploadStatus.textContent = `Uploading ${files.length} files...`;
+                await new Promise(resolve => setTimeout(resolve, 800));
+                showProgress(40);
+                 await new Promise(resolve => setTimeout(resolve, 1000));
+                showProgress(75);
+                // ** End Simulation **
+
+                const response = await fetch('/upload-folder', { // Replace with your actual endpoint
+                    method: 'POST',
+                    body: formData,
+                    // Add headers if needed (e.g., Authorization)
+                    // onUploadProgress: (progressEvent) => { // Use this with XMLHttpRequest
+                    //     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    //     showProgress(percentCompleted);
+                    // }
+                });
+
+                if (!response.ok) {
+                    // Try to get error message from response, fallback to status text
+                    let errorMsg = `Upload failed: ${response.statusText}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = `Upload failed: ${errorData.message || response.statusText}`;
+                    } catch (e) { /* Ignore if response is not JSON */ }
+                    throw new Error(errorMsg);
+                }
+
+                const { uuid, link } = await response.json();
+
+                // --- Success ---
+                showProgress(100); // Ensure progress hits 100%
+                uploadStatus.textContent = 'Complete!';
+                await new Promise(resolve => setTimeout(resolve, 300)); // Short delay before showing result
+                hideProgress();
+                showResult('Folder uploaded successfully!', true, { uuid, link });
+                setButtonState(false, 'Upload Another'); // Change button text after success
+
+
+            } catch (error) {
+                // --- Error ---
+                console.error("Upload error:", error);
+                hideProgress();
+                showResult(error.message || 'An unexpected error occurred during upload.', false);
+                setButtonState(false, 'Try Again'); // Change button text on error
+            }
+        });
+
+        // --- Drag and Drop Support ---
+        const fileInputArea = document.querySelector('.file-input-area');
+
+        // Highlight drop area on drag
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileInputArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInputArea.classList.add('ring-2', 'ring-indigo-400', 'bg-indigo-50');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileInputArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInputArea.classList.remove('ring-2', 'ring-indigo-400', 'bg-indigo-50');
+            });
+        });
+
+        fileInputArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const items = e.dataTransfer.items;
+            if (!items || items.length === 0) return;
+
+            // Only accept directories or files
+            let files = [];
+            let pending = 0;
+            let done = false;
+
+            function traverseFileTree(item, path = "") {
+                if (item.isFile) {
+                    pending++;
+                    item.file(file => {
+                        // Set webkitRelativePath for each file
+                        Object.defineProperty(file, 'webkitRelativePath', {
+                            value: path + file.name,
+                        });
+                        files.push(file);
+                        pending--;
+                        if (pending === 0 && done) {
+                            handleFiles(files);
+                        }
+                    });
+                } else if (item.isDirectory) {
+                    const dirReader = item.createReader();
+                    pending++;
+                    dirReader.readEntries(entries => {
+                        entries.forEach(entry => {
+                            traverseFileTree(entry, path + item.name + "/");
+                        });
+                        pending--;
+                        if (pending === 0 && done) {
+                            handleFiles(files);
+                        }
+                    });
+                }
+            }
+
+            // Start traversing
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i].webkitGetAsEntry && items[i].webkitGetAsEntry();
+                if (item) {
+                    traverseFileTree(item);
+                }
+            }
+            done = true;
+            if (pending === 0) {
+                handleFiles(files);
+            }
+        });
+
+        function handleFiles(files) {
+            // Create a DataTransfer to assign files to the input
+            const dataTransfer = new DataTransfer();
+            files.forEach(file => dataTransfer.items.add(file));
+            fileInput.files = dataTransfer.files;
+            // Trigger change event to update UI
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    </script>
+</body>
+</html>
+``` 

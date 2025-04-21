@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility Tools Collection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Optional: Add custom base styles or overrides if needed */
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Add subtle animation to cards */
+        .tool-card {
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        .tool-card:hover {
+            transform: translateY(-5px); /* Lift effect */
+        }
+    </style>
+</head>
+<body class="font-sans bg-gradient-to-br from-gray-50 to-indigo-100 text-gray-800 min-h-screen">
+
+    <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md py-8 text-center">
+        <h1 class="text-4xl font-bold mb-2">Utility Tools</h1>
+        <p class="text-indigo-100 text-lg">Your one-stop collection for handy utilities.</p>
+    </header>
+
+    <main class="container mx-auto px-4 py-12">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+
+            <div class="tool-card bg-white rounded-xl shadow-lg overflow-hidden p-6 text-center flex flex-col justify-between hover:shadow-xl">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">Calculator</h2>
+                    <p class="text-gray-500 text-sm mb-6">Perform basic calculations quickly.</p>
+                </div>
+                <a href="/calculator.html" class="inline-block mt-auto bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium py-2 px-5 rounded-md transition duration-300 ease-in-out shadow-sm hover:shadow-md">
+                    Open Tool
+                </a>
+            </div>
+
+            <div class="tool-card bg-white rounded-xl shadow-lg overflow-hidden p-6 text-center flex flex-col justify-between hover:shadow-xl">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">Unit Converter</h2>
+                    <p class="text-gray-500 text-sm mb-6">Convert between various units easily.</p>
+                </div>
+                <a href="/unit-converter.html" class="inline-block mt-auto bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium py-2 px-5 rounded-md transition duration-300 ease-in-out shadow-sm hover:shadow-md">
+                    Open Tool
+                </a>
+            </div>
+
+            <div class="tool-card bg-white rounded-xl shadow-lg overflow-hidden p-6 text-center flex flex-col justify-between hover:shadow-xl">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">Text Formatter</h2>
+                    <p class="text-gray-500 text-sm mb-6">Format your text case or style.</p>
+                </div>
+                <a href="/text-formatter.html" class="inline-block mt-auto bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium py-2 px-5 rounded-md transition duration-300 ease-in-out shadow-sm hover:shadow-md">
+                    Open Tool
+                </a>
+            </div>
+
+            <div class="tool-card bg-white rounded-xl shadow-lg overflow-hidden p-6 text-center flex flex-col justify-between hover:shadow-xl">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">Password Generator</h2>
+                    <p class="text-gray-500 text-sm mb-6">Create strong, secure passwords.</p>
+                </div>
+                <a href="/password-generator.html" class="inline-block mt-auto bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium py-2 px-5 rounded-md transition duration-300 ease-in-out shadow-sm hover:shadow-md">
+                    Open Tool
+                </a>
+            </div>
+
+             <div class="tool-card bg-white rounded-xl shadow-lg overflow-hidden p-6 text-center flex flex-col justify-between hover:shadow-xl">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-3">Color Picker</h2>
+                     <p class="text-gray-500 text-sm mb-6">Pick colors and get hex/rgb values.</p>
+                 </div>
+                <a href="/color-picker.html" class="inline-block mt-auto bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium py-2 px-5 rounded-md transition duration-300 ease-in-out shadow-sm hover:shadow-md">
+                    Open Tool
+                </a>
+            </div>
+
+            </div>
+    </main>
+
+    <footer class="text-center py-6 text-gray-500 text-sm mt-8">
+        &copy; <script>document.write(new Date().getFullYear())</script> Modern Utilities. All rights reserved.
+    </footer>
+
+</body>
+</html>
